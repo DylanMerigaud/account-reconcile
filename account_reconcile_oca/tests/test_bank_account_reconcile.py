@@ -258,6 +258,11 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
             self.assertTrue(f.can_reconcile)
             f.manual_reference = f"account.move.line;{receivable1.id}"
             self.assertEqual(-50, f.manual_amount)
+            # Clicking the selected line again removes it and clears the selection
+            f.add_account_move_line_id = receivable1
+            self.assertFalse(f.manual_reference)
+            f.add_account_move_line_id = receivable1
+            f.manual_reference = f"account.move.line;{receivable1.id}"
         self.assertEqual(2, len(bank_stmt_line.reconcile_data_info["data"]))
         bank_stmt_line.button_manual_reference_full_paid()
         self.assertEqual(3, len(bank_stmt_line.reconcile_data_info["data"]))
@@ -267,6 +272,9 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         ) as f:
             f.manual_reference = f"account.move.line;{receivable1.id}"
             self.assertEqual(-100, f.manual_amount)
+        # The line already pays the whole invoice, so there is nothing to add
+        bank_stmt_line.button_manual_reference_full_paid()
+        self.assertEqual(3, len(bank_stmt_line.reconcile_data_info["data"]))
 
     @mute_logger("odoo.models.unlink")
     def test_reconcile_invoice_unreconcile(self):

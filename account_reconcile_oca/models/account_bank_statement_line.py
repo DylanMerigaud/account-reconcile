@@ -220,6 +220,8 @@ class AccountBankStatementLine(models.Model):
                 is_new_line = False
                 if keep_current:
                     new_data.append(line)
+                elif line["reference"] == self.manual_reference:
+                    self.update(self._get_manual_delete_vals())
             else:
                 new_data.append(line)
         if is_new_line:
@@ -1200,7 +1202,12 @@ class AccountBankStatementLine(models.Model):
         new_data = []
         reconcile_auxiliary_id = self.reconcile_data_info["reconcile_auxiliary_id"]
         for line in data:
-            if line["reference"] == manual_reference and line.get("id"):
+            # Only a line paying part of the open amount has an original amount
+            if (
+                line["reference"] == manual_reference
+                and line.get("id")
+                and "original_amount_unsigned" in line
+            ):
                 total_amount = -line["amount"] + line["original_amount_unsigned"]
                 original_amount = line["original_amount_unsigned"]
                 reconcile_auxiliary_id, lines = self._get_reconcile_line(
